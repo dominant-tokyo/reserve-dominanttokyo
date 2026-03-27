@@ -53,7 +53,7 @@ function generateDemoShifts() {
           slots.push({ time: `${String(h).padStart(2,"0")}:00`, available: !booked });
         }
       });
-      if (slots.length > 0) shifts[dateStr][staff.id] = slots;
+      if (slots.length > 0) shifts[dateStr][(staff.id || staff.ID || "")] = slots;
     });
   }
   return shifts;
@@ -191,7 +191,7 @@ function getAvailableFromDate(now) {
 
 function Avatar({ staff, size = 80 }) {
   const colors = ["#8B6914","#7B5A9E","#1A6B8A","#8A1A3B","#1A8A4A"];
-  const colorIdx = staff.id.charCodeAt(1) % colors.length;
+  const colorIdx = (((staff.id || staff.ID || "") || staff.ID || "s01")).charCodeAt(1) % colors.length;
   if (staff.photo) {
     return (
       <div style={{
@@ -308,16 +308,16 @@ function StepStaff({ staffList, onNext }) {
       <p style={{ color: "#888", fontSize: 13, marginBottom: 24, fontFamily: "'Noto Sans JP',sans-serif" }}>ご希望の女王様をお選びください</p>
       <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
         {staffList.map(staff => (
-          <div key={staff.id} onClick={() => setSelected(staff.id)} style={{
-            background: selected === staff.id ? "#1a1305" : "#0d0d0d",
-            border: selected === staff.id ? "1px solid #C9A84C" : "1px solid #1e1e1e",
+          <div key={(staff.id || staff.ID || "")} onClick={() => setSelected((staff.id || staff.ID || ""))} style={{
+            background: selected === (staff.id || staff.ID || "") ? "#1a1305" : "#0d0d0d",
+            border: selected === (staff.id || staff.ID || "") ? "1px solid #C9A84C" : "1px solid #1e1e1e",
             borderRadius: 10, padding: "16px 20px", cursor: "pointer",
             transition: "all 0.2s"
           }}>
             <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
               <div style={{ position: "relative" }}>
                 <Avatar staff={staff} size={64} />
-                {selected === staff.id && (
+                {selected === (staff.id || staff.ID || "") && (
                   <div style={{
                     position: "absolute", bottom: -2, right: -2,
                     width: 20, height: 20, borderRadius: "50%",
@@ -335,16 +335,16 @@ function StepStaff({ staffList, onNext }) {
                 <p style={{
                   color: "#888", fontSize: 12, margin: 0,
                   fontFamily: "'Noto Sans JP',sans-serif", lineHeight: 1.6,
-                  overflow: expanded === staff.id ? "visible" : "hidden",
-                  display: expanded === staff.id ? "block" : "-webkit-box",
-                  WebkitLineClamp: expanded === staff.id ? undefined : 2,
+                  overflow: expanded === (staff.id || staff.ID || "") ? "visible" : "hidden",
+                  display: expanded === (staff.id || staff.ID || "") ? "block" : "-webkit-box",
+                  WebkitLineClamp: expanded === (staff.id || staff.ID || "") ? undefined : 2,
                   WebkitBoxOrient: "vertical"
                 }}>{staff.intro}</p>
               </div>
-              <button onClick={e => { e.stopPropagation(); setExpanded(expanded === staff.id ? null : staff.id); }} style={{
+              <button onClick={e => { e.stopPropagation(); setExpanded(expanded === (staff.id || staff.ID || "") ? null : (staff.id || staff.ID || "")); }} style={{
                 background: "none", border: "1px solid #333", color: "#666",
                 padding: "4px 8px", borderRadius: 4, fontSize: 11, cursor: "pointer", flexShrink: 0
-              }}>{expanded === staff.id ? "閉じる" : "続きを読む"}</button>
+              }}>{expanded === (staff.id || staff.ID || "") ? "閉じる" : "続きを読む"}</button>
             </div>
           </div>
         ))}
@@ -371,10 +371,10 @@ function StepDateTime({ staff, shifts, reservations, onNext }) {
   }
 
   const getStaffSlots = (dateStr) => {
-    const staffShifts = shifts[dateStr]?.[staff.id] || [];
+    const staffShifts = shifts[dateStr]?.[(staff.id || staff.ID || "")] || [];
     return staffShifts.map(slot => {
       const bookedByRes = reservations.some(r =>
-        r.staffId === staff.id && r.date === dateStr && r.time === slot.time && r.status !== "キャンセル"
+        r.staffId === (staff.id || staff.ID || "") && r.date === dateStr && r.time === slot.time && r.status !== "キャンセル"
       );
       return { ...slot, available: slot.available && !bookedByRes };
     });
@@ -473,8 +473,8 @@ function StepMenu({ staff, menus, options, transport, memberType, onNext }) {
   const [selectedOptions, setSelectedOptions] = useState([]);
   const [selectedTransport, setSelectedTransport] = useState(null);
 
-  const staffOptions = options[staff.id] || options["default"] || [];
-  const staffTransport = transport[staff.id] || transport["default"] || [];
+  const staffOptions = options[(staff.id || staff.ID || "")] || options["default"] || [];
+  const staffTransport = transport[(staff.id || staff.ID || "")] || transport["default"] || [];
 
   const toggleOption = (opt) => {
     setSelectedOptions(prev =>
@@ -840,8 +840,8 @@ export default function App() {
     fetch(gasUrl + "?action=getData")
       .then(r => r.json())
       .then(data => {
-        if (data.staff?.length) setStaffList(data.staff);
-        if (data.menus?.length) setMenus(data.menus);
+        if (data.staff?.length) setStaffList(data.staff.map(s => ({ id: s.ID || s.id, name: s["英語名"] || s.name, nameJp: s["名前"] || s.nameJp, photo: s["写真URL"] || s.photo || "", intro: s["自己紹介"] || s.intro || "" })));
+        if (data.menus?.length) setMenus(data.menus.map(m => ({ id: m.ID || m.id, name: m["名前"] || m.name, price: m["金額"] || m.price, duration: m["所要時間"] || m.duration })));
         if (data.shifts?.length) {
           // Convert shifts array to map
           const sm = {};
