@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 
 // ─── DEMO DATA ────────────────────────────────────────────────────────────────
 const DEMO_STAFF = [
@@ -321,14 +321,23 @@ function StepDateTime({ staff, shifts, reservations, selectedMenu, onNext, onBac
     }
 
     return rawSlots.filter(time => {
-      // ダブルブッキングチェック
-      const booked = reservations.some(r => r.staffId === sid && r.date === dateStr && r.time === time && r.status !== "キャンセル");
-      if (booked) return false;
-      // 所要時間チェック：終了時間が24:00(1440分)を超えないか
-      if (duration > 0) {
-        const startMin = timeToMinutes(time);
-        if (startMin + duration > 24 * 60) return false;
-      }
+      const startMin = timeToMinutes(time);
+
+      // 1. 終了時間が24:00を超える枠は非表示
+      if (duration > 0 && startMin + duration > 24 * 60) return false;
+
+      // 2. 既存予約との重複チェック（前の予約の所要時間を考慮）
+      const conflict = reservations.some(r => {
+        if (r.staffId !== sid || r.date !== dateStr || r.status === "キャンセル") return false;
+        const rStart = timeToMinutes(r.time);
+        const rDuration = Number(r.duration || r.menuDuration || 60);
+        const rEnd = rStart + rDuration;
+        const myEnd = startMin + (duration > 0 ? duration : 60);
+        // 時間帯が重なっていたらNG
+        return startMin < rEnd && myEnd > rStart;
+      });
+      if (conflict) return false;
+
       return true;
     });
   };
@@ -424,10 +433,7 @@ function StepMenu({ staff, menus, options, transport, memberType, onNext, onBack
       <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 24 }}>
         {menus.map(m => (
           <button key={m.id || m.ID} onClick={() => setMenu(m)} style={{ background: menu?.id === (m.id||m.ID) ? "#1a1305" : "#0f0f0f", border: menu?.id === (m.id||m.ID) ? "1px solid #C9A84C" : "1px solid #1e1e1e", borderRadius: 8, padding: "14px 18px", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center", transition: "all 0.15s" }}>
-            <div style={{ textAlign: "left" }}>
-              <div style={{ color: menu?.id === (m.id||m.ID) ? "#e8d5a3" : "#bbb", fontSize: 15, fontFamily: "'Cormorant Garamond',serif", fontWeight: 600 }}>{m.name}</div>
-              <div style={{ color: "#666", fontSize: 12, marginTop: 2, fontFamily: "'Noto Sans JP',sans-serif" }}>所要時間: {m.duration}分</div>
-            </div>
+            <div style={{ color: menu?.id === (m.id||m.ID) ? "#e8d5a3" : "#bbb", fontSize: 15, fontFamily: "'Noto Sans JP',sans-serif", fontWeight: 600 }}>{m.name}</div>
             <div style={{ color: menu?.id === (m.id||m.ID) ? "#C9A84C" : "#888", fontSize: 15, fontFamily: "'Noto Sans JP',sans-serif", fontWeight: 700 }}>{formatPrice(m.price)}</div>
           </button>
         ))}
@@ -628,7 +634,7 @@ const styles = {
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [step, setStep] = useState(0);
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbyacp7AawmgSqgCHhWB1cR36zkSw4XnuaZjqNKNt14-Kmlh8648EulGkB5XjGjfFVfQnQ/exec";
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbzBJ_8mIG-xGDUjWtgsQLfflA7pY_H5mri6UE8OYl38F94J4DIJrAK3QjdPQLJSRhGcVA/exec";
   const [gasUrl, setGasUrl] = useState(GAS_URL);
   const [showGasPanel, setShowGasPanel] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -722,6 +728,7 @@ export default function App() {
       time: selectedTime,
       menuId: selectedMenu.id,
       menuName: selectedMenu.name,
+      menuDuration: selectedMenu.duration,
       options: selectedOptions.map(o => o.name),
       transportId: selectedTransport?.id,
       transportName: selectedTransport?.name,
