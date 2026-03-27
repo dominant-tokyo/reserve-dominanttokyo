@@ -1,20 +1,7 @@
 import { useState, useEffect } from "react";
 
 // ─── DEMO DATA ────────────────────────────────────────────────────────────────
-const DEMO_STAFF = [
-  { id: "s01", name: "Reina", nameJp: "麗奈", photo: "", intro: "東京出身。圧倒的な存在感と知性で、あなたの心の奥底まで支配いたします。初めての方も安心してお任せください。" },
-  { id: "s02", name: "Yuki", nameJp: "雪姫", photo: "", intro: "冷酷な微笑みと鋭い眼差しが特徴。言葉一つであなたを虜にする、女王の中の女王。" },
-  { id: "s03", name: "Mira", nameJp: "美羅", photo: "", intro: "優雅さと厳しさを兼ね備えた完璧な支配者。エレガントな責め苦をご提供いたします。" },
-  { id: "s04", name: "Akane", nameJp: "朱音", photo: "", intro: "情熱的な性格と強烈なカリスマ性で、訪れる者すべてを虜にします。" },
-  { id: "s05", name: "Sora", nameJp: "蒼空", photo: "", intro: "神秘的な雰囲気と深い洞察力で、あなたの内なる欲望を引き出します。" },
-  { id: "s06", name: "Luna", nameJp: "月華", photo: "", intro: "月のように美しく、夜のように深い支配をご体験ください。" },
-  { id: "s07", name: "Kei", nameJp: "桂", photo: "", intro: "凛とした佇まいと圧倒的な美貌。一言一句があなたの魂を縛ります。" },
-  { id: "s08", name: "Nao", nameJp: "奈緒", photo: "", intro: "柔らかな声音の中に隠された鋼の意志。甘美な地獄へとご案内いたします。" },
-  { id: "s09", name: "Hina", nameJp: "雛", photo: "", intro: "見た目の可愛らしさと内なる残酷さのギャップが魅力。虜になること間違いなし。" },
-  { id: "s10", name: "Rin", nameJp: "凜", photo: "", intro: "清廉な美しさの裏に潜む漆黒の支配欲。完璧な服従をご体験いただけます。" },
-  { id: "s11", name: "Ai", nameJp: "藍", photo: "", intro: "深い藍色の眼差しで心の奥まで見透かす、神秘の支配者。" },
-  { id: "s12", name: "Mei", nameJp: "明", photo: "", intro: "明るい笑顔の奥に隠された絶対的な支配力。あなたを光と闇の境界へ誘います。" },
-];
+const DEMO_STAFF = [];
 
 const DEMO_MENUS = [
   { id: "m01", name: "スタンダードコース", price: 15000, duration: 60 },
@@ -170,13 +157,15 @@ function timeToMinutes(t) {
 
 // ─── COMPONENTS ───────────────────────────────────────────────────────────────
 function Avatar({ staff, size = 80 }) {
+  const [imgError, setImgError] = useState(false);
   const colors = ["#8B6914","#7B5A9E","#1A6B8A","#8A1A3B","#1A8A4A"];
   const id = staff.id || staff.ID || "s01";
   const colorIdx = id.charCodeAt(id.length - 1) % colors.length;
-  if (staff.photo) {
+  const showImg = staff.photo && !imgError;
+  if (showImg) {
     return (
       <div style={{ width: size, height: size, borderRadius: "50%", overflow: "hidden", border: "2px solid #C9A84C", flexShrink: 0 }}>
-        <img src={staff.photo} alt={staff.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={e => { e.target.style.display = "none"; }} />
+        <img src={staff.photo} alt={staff.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={() => setImgError(true)} />
       </div>
     );
   }
@@ -188,7 +177,7 @@ function Avatar({ staff, size = 80 }) {
 }
 
 function StepBar({ step }) {
-  const steps = ["区分","指名","日時","メニュー","確認","完了"];
+  const steps = ["区分","指名","メニュー","日時","確認","完了"];
   return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 0, margin: "0 0 32px", overflowX: "auto", paddingBottom: 4 }}>
       {steps.map((s, i) => (
@@ -254,7 +243,6 @@ function StepMemberType({ onNext }) {
 // STEP 1
 function StepStaff({ staffList, onNext, onBack }) {
   const [selected, setSelected] = useState(null);
-  const [expanded, setExpanded] = useState(null);
   return (
     <div style={{ animation: "fadeIn 0.4s ease" }}>
       <BackButton onClick={onBack} />
@@ -271,13 +259,12 @@ function StepStaff({ staffList, onNext, onBack }) {
                   {selected === sid && <div style={{ position: "absolute", bottom: -2, right: -2, width: 20, height: 20, borderRadius: "50%", background: "#C9A84C", border: "2px solid #0d0d0d", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#0d0d0d", fontWeight: 900 }}>✓</div>}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+                  <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
                     <span style={{ color: "#e8d5a3", fontSize: 18, fontFamily: "'Cormorant Garamond',serif", fontWeight: 700 }}>{staff.nameJp || staff.name}</span>
                     <span style={{ color: "#777", fontSize: 12, letterSpacing: "0.1em" }}>{staff.name}</span>
                   </div>
-                  <p style={{ color: "#888", fontSize: 12, margin: 0, fontFamily: "'Noto Sans JP',sans-serif", lineHeight: 1.6, overflow: expanded === sid ? "visible" : "hidden", display: expanded === sid ? "block" : "-webkit-box", WebkitLineClamp: expanded === sid ? undefined : 2, WebkitBoxOrient: "vertical" }}>{staff.intro}</p>
+                  <p style={{ color: "#888", fontSize: 12, margin: 0, fontFamily: "'Noto Sans JP',sans-serif", lineHeight: 1.6, textAlign: "left" }}>{staff.intro}</p>
                 </div>
-                <button onClick={e => { e.stopPropagation(); setExpanded(expanded === sid ? null : sid); }} style={{ background: "none", border: "1px solid #333", color: "#666", padding: "4px 8px", borderRadius: 4, fontSize: 11, cursor: "pointer", flexShrink: 0 }}>{expanded === sid ? "閉じる" : "続きを読む"}</button>
               </div>
             </div>
           );
@@ -782,8 +769,8 @@ export default function App() {
           {error && <div style={{ background: "#1a0505", border: "1px solid #f4433688", borderRadius: 8, padding: "12px 16px", marginBottom: 20, color: "#f44336", fontSize: 13, fontFamily: "'Noto Sans JP',sans-serif" }}>⚠ {error}</div>}
           {step === 0 && <StepMemberType onNext={t => { setMemberType(t); setStep(1); }} />}
           {step === 1 && <StepStaff staffList={staffList} onNext={s => { setSelectedStaff(s); setStep(2); }} onBack={() => setStep(0)} />}
-          {step === 2 && <StepDateTime staff={selectedStaff} shifts={shifts} reservations={reservations} selectedMenu={selectedMenu} onNext={(d,t) => { setSelectedDate(d); setSelectedTime(t); setStep(3); }} onBack={() => setStep(1)} />}
-          {step === 3 && <StepMenu staff={selectedStaff} menus={menus} options={optionsMap} transport={transportMap} memberType={memberType} onNext={(m,opts,tr,total) => { setSelectedMenu(m); setSelectedOptions(opts); setSelectedTransport(tr); setTotalPrice(total); setStep(4); }} onBack={() => setStep(2)} />}
+          {step === 2 && <StepMenu staff={selectedStaff} menus={menus} options={optionsMap} transport={transportMap} memberType={memberType} onNext={(m,opts,tr,total) => { setSelectedMenu(m); setSelectedOptions(opts); setSelectedTransport(tr); setTotalPrice(total); setStep(3); }} onBack={() => setStep(1)} />}
+          {step === 3 && <StepDateTime staff={selectedStaff} shifts={shifts} reservations={reservations} selectedMenu={selectedMenu} onNext={(d,t) => { setSelectedDate(d); setSelectedTime(t); setStep(4); }} onBack={() => setStep(2)} />}
           {step === 4 && <StepConfirm booking={booking} onSubmit={handleSubmit} onBack={() => setStep(3)} loading={loading} />}
           {step === 5 && <StepComplete booking={booking} reservationId={reservationId} />}
         </div>
