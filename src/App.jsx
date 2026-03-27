@@ -808,7 +808,7 @@ const styles = {
 // ─── MAIN APP ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [step, setStep] = useState(0);
-  const [gasUrl, setGasUrl] = useState("");
+  const [gasUrl, setGasUrl] = useState("https://script.google.com/macros/s/AKfycbzBJ_8mIG-xGDUjWtgsQLfflA7pY_H5mri6UE8OYl38F94J4DIJrAK3QjdPQLJSRhGcVA/exec");
   const [showGasPanel, setShowGasPanel] = useState(false);
   const [loading, setLoading] = useState(false);
   const [dataLoading, setDataLoading] = useState(false);
