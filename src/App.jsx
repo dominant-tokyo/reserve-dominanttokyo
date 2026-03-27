@@ -254,14 +254,12 @@ function StepStaff({ staffList, onNext, onBack }) {
           return (
             <div key={sid} onClick={() => setSelected(sid)} style={{ background: selected === sid ? "#1a1305" : "#0d0d0d", border: selected === sid ? "1px solid #C9A84C" : "1px solid #1e1e1e", borderRadius: 10, padding: "16px 20px", cursor: "pointer", transition: "all 0.2s" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                <div style={{ position: "relative" }}>
-                  <Avatar staff={staff} size={64} />
-                  {selected === sid && <div style={{ position: "absolute", bottom: -2, right: -2, width: 20, height: 20, borderRadius: "50%", background: "#C9A84C", border: "2px solid #0d0d0d", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11, color: "#0d0d0d", fontWeight: 900 }}>✓</div>}
+                <div style={{ width: 64, height: 64, borderRadius: "50%", background: selected === sid ? "#C9A84C22" : "#1a1a1a", border: selected === sid ? "2px solid #C9A84C" : "2px solid #333", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                  {selected === sid && <span style={{ color: "#C9A84C", fontSize: 20, fontWeight: 900 }}>✓</span>}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 6 }}>
                     <span style={{ color: "#e8d5a3", fontSize: 18, fontFamily: "'Cormorant Garamond',serif", fontWeight: 700 }}>{staff.nameJp || staff.name}</span>
-                    <span style={{ color: "#777", fontSize: 12, letterSpacing: "0.1em" }}>{staff.name}</span>
                   </div>
                   <p style={{ color: "#888", fontSize: 12, margin: 0, fontFamily: "'Noto Sans JP',sans-serif", lineHeight: 1.6, textAlign: "left" }}>{staff.intro}</p>
                 </div>
@@ -299,12 +297,14 @@ function StepDateTime({ staff, shifts, reservations, selectedMenu, onNext, onBac
     const shiftData = shifts[dateStr]?.[sid];
     if (!shiftData) return [];
 
-    // GASから来るデータ形式 { slots: [...] } または 配列
+    // シフトデータは配列 ["12:00","13:00",...] の形式
     let rawSlots = [];
     if (Array.isArray(shiftData)) {
-      rawSlots = shiftData.map(s => typeof s === "string" ? s : s.time).filter(Boolean);
-    } else if (shiftData.slots) {
+      rawSlots = shiftData.map(s => typeof s === "string" ? s : String(s)).filter(Boolean);
+    } else if (shiftData.slots && Array.isArray(shiftData.slots)) {
       rawSlots = shiftData.slots;
+    } else if (typeof shiftData === "object") {
+      rawSlots = Object.values(shiftData).filter(v => typeof v === "string");
     }
 
     return rawSlots.filter(time => {
@@ -344,7 +344,7 @@ function StepDateTime({ staff, shifts, reservations, selectedMenu, onNext, onBac
       <h2 style={styles.stepTitle}>日時選択 <span style={styles.stepTitleEn}>DATE & TIME</span></h2>
       <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, background: "#0f0f0f", border: "1px solid #2a2a2a", borderRadius: 8, padding: "12px 16px" }}>
         <Avatar staff={staff} size={40} />
-        <span style={{ color: "#e8d5a3", fontFamily: "'Cormorant Garamond',serif", fontSize: 16 }}>{staff.nameJp || staff.name} 女王様</span>
+        <span style={{ color: "#e8d5a3", fontFamily: "'Cormorant Garamond',serif", fontSize: 16 }}>{staff.nameJp || staff.name}</span>
       </div>
       {selectedMenu && (
         <div style={{ background: "#111", border: "1px solid #2a2a2a", borderRadius: 6, padding: "8px 14px", marginBottom: 16, color: "#888", fontSize: 12, fontFamily: "'Noto Sans JP',sans-serif" }}>
