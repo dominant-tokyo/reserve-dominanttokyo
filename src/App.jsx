@@ -25,7 +25,7 @@ function generateDemoShifts() {
   for (let d = 1; d < 30; d++) {
     const date = new Date(today);
     date.setDate(today.getDate() + d);
-    const dateStr = date.toISOString().split("T")[0];
+    const dateStr = toLocalDateStr(date);
     shifts[dateStr] = {};
     DEMO_STAFF.forEach(staff => {
       const slots = [];
@@ -147,6 +147,13 @@ function getAvailableFromDate(now) {
   d.setDate(d.getDate() + (d.getHours() >= 18 ? 2 : 1));
   d.setHours(0,0,0,0);
   return d;
+}
+
+function toLocalDateStr(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return y + "-" + m + "-" + day;
 }
 
 // 時間文字列 "HH:MM" を分数に変換
@@ -330,11 +337,11 @@ function StepDateTime({ staff, shifts, reservations, selectedMenu, onNext, onBac
   };
 
   const hasSlots = (d) => {
-    const ds = d.toISOString().split("T")[0];
+    const ds = toLocalDateStr(d);
     return getStaffSlots(ds).length > 0;
   };
 
-  const selectedDateStr = selectedDate ? selectedDate.toISOString().split("T")[0] : null;
+  const selectedDateStr = selectedDate ? toLocalDateStr(selectedDate) : null;
   const availableSlots = selectedDateStr ? getStaffSlots(selectedDateStr) : [];
   const dayNames = ["日","月","火","水","木","金","土"];
 
@@ -360,7 +367,7 @@ function StepDateTime({ staff, shifts, reservations, selectedMenu, onNext, onBac
       <div style={{ display: "flex", gap: 8, overflowX: "auto", paddingBottom: 8, marginBottom: 24 }}>
         {dates.map((d, i) => {
           const active = hasSlots(d);
-          const isSelected = selectedDateStr === d.toISOString().split("T")[0];
+          const isSelected = selectedDateStr === toLocalDateStr(d);
           return (
             <button key={i} onClick={() => { if (active) { setSelectedDate(d); setSelectedSlot(null); } }} style={{ minWidth: 56, padding: "10px 8px", borderRadius: 8, flexShrink: 0, background: isSelected ? "#1a1305" : "#0f0f0f", border: isSelected ? "1px solid #C9A84C" : "1px solid #1e1e1e", cursor: active ? "pointer" : "not-allowed", opacity: active ? 1 : 0.25, transition: "all 0.15s" }}>
               <div style={{ color: d.getDay() === 0 ? "#ff6b6b" : d.getDay() === 6 ? "#6bb5ff" : "#888", fontSize: 10, marginBottom: 2 }}>{dayNames[d.getDay()]}</div>
@@ -711,7 +718,7 @@ export default function App() {
       memberType,
       staffId: selectedStaff.id,
       staffName: selectedStaff.nameJp || selectedStaff.name,
-      date: selectedDate.toISOString().split("T")[0],
+      date: toLocalDateStr(selectedDate),
       time: selectedTime,
       menuId: selectedMenu.id,
       menuName: selectedMenu.name,
